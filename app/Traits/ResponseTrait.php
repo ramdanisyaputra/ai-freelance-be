@@ -46,7 +46,7 @@ trait ResponseTrait
         return $this->errorResponse($message, 403);
     }
 
-    public function internalServerErrorResponse($message) 
+    public function internalServerErrorResponse($message = 'Something went wrong') 
     {
         return $this->errorResponse($message, 500);
     }

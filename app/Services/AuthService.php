@@ -32,6 +32,7 @@ class AuthService
 
         // Create freelancer profile
         $profile = $this->profileRepository->create($user->id, [
+            'role' => $data['role'],
             'stack' => $data['stack'],
             'rate_type' => $data['rate_type'],
             'min_price' => $data['min_price'],

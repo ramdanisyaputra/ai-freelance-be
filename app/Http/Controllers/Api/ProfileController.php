@@ -11,47 +11,61 @@ use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
+    use \App\Traits\ResponseTrait;
+
     public function update(Request $request)
     {
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'avatar' => ['nullable', 'image', 'max:1024'], // 1MB Max
-        ]);
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+                'avatar' => ['nullable', 'image', 'max:1024'], // 1MB Max
+            ]);
 
-        if ($request->hasFile('avatar')) {
-            // Delete old avatar if exists
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
+            if ($request->hasFile('avatar')) {
+                // Delete old avatar if exists
+                if ($user->avatar) {
+                    Storage::disk('public')->delete($user->avatar);
+                }
+
+                $path = $request->file('avatar')->store('avatars', 'public');
+                $validated['avatar'] = $path;
             }
 
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $validated['avatar'] = $path;
+            $user->update($validated);
+
+            return $this->successResponse([
+                'message' => 'Profile updated successfully.',
+                'user' => $user,
+            ]);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Profile Update Error: ' . $e->getMessage());
+            return $this->internalServerErrorResponse('Failed to update profile.');
         }
-
-        $user->update($validated);
-
-        return response()->json([
-            'message' => 'Profile updated successfully.',
-            'user' => $user,
-        ]);
     }
 
     public function updatePassword(Request $request)
     {
-        $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', 'min:8'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'current_password' => ['required', 'current_password'],
+                'password' => ['required', 'confirmed', 'min:8'],
+            ]);
 
-        $request->user()->update([
-            'password' => Hash::make($validated['password']),
-        ]);
+            $request->user()->update([
+                'password' => Hash::make($validated['password']),
+            ]);
 
-        return response()->json([
-            'message' => 'Password updated successfully.',
-        ]);
+            return $this->successResponseMessage('Password updated successfully.');
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Password Update Error: ' . $e->getMessage());
+            return $this->internalServerErrorResponse('Failed to update password.');
+        }
     }
 }
