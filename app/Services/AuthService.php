@@ -76,15 +76,14 @@ class AuthService
         ];
     }
 
-    /**
-     * Logout the current user.
-     *
-     * @param User $user
-     * @return void
-     */
-    public function logout(User $user): void
+    public function logout($user)
     {
-        // Revoke current token
-        $user->currentAccessToken()->delete();
+        $accessToken = $user->currentAccessToken();
+        
+        if ($accessToken instanceof \Laravel\Sanctum\PersonalAccessToken) {
+            $accessToken->delete();
+        }
+
+        return 'Logged out';
     }
 }
