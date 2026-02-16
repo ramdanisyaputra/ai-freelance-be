@@ -13,6 +13,7 @@ class FreelancerProfile extends Model
      */
     protected $fillable = [
         'user_id',
+        'role',
         'stack',
         'rate_type',
         'min_price',

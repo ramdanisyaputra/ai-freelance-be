@@ -9,6 +9,8 @@ use App\Services\AuthService;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -27,7 +29,11 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
+            DB::beginTransaction();
+
             $result = $this->authService->register($request->validated());
+
+            DB::commit();
 
             return $this->successResponse([
                 'message' => 'User registered successfully',
@@ -35,7 +41,8 @@ class AuthController extends Controller
                 'token' => $result['token'],
             ], 201);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Register Error: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Register Error: ' . $e->getMessage());
             return $this->internalServerErrorResponse('Registration failed. Please try again.');
         }
     }
@@ -49,18 +56,26 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         try {
+            DB::beginTransaction();
+
             $result = $this->authService->login(
                 $request->validated('email'),
                 $request->validated('password')
             );
+
+            DB::commit();
 
             return $this->successResponse([
                 'message' => 'Login successful',
                 'user' => $result['user'],
                 'token' => $result['token'],
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            throw $e;
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Login Error: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Login Error: ' . $e->getMessage());
             return $this->internalServerErrorResponse('Login failed. Please try again.');
         }
     }
@@ -74,6 +89,8 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
+            DB::beginTransaction();
+
             $this->authService->logout($request->user());
 
             if ($request->hasSession()) {
@@ -82,9 +99,12 @@ class AuthController extends Controller
                 $request->session()->regenerateToken(); 
             }
 
+            DB::commit();
+
             return $this->successResponseMessage('Logout successful');
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Logout Error: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Logout Error: ' . $e->getMessage());
             return $this->internalServerErrorResponse('Logout failed.');
         }
     }

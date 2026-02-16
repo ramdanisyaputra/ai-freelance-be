@@ -18,6 +18,7 @@ class FreelancerProfileRepository implements FreelancerProfileRepositoryInterfac
     {
         return FreelancerProfile::create([
             'user_id' => $userId,
+            'role' => $data['role'],
             'stack' => $data['stack'],
             'rate_type' => $data['rate_type'],
             'min_price' => $data['min_price'],

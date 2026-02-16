@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -16,6 +18,8 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         try {
+            DB::beginTransaction();
+
             $user = $request->user();
 
             $validated = $request->validate([
@@ -36,14 +40,18 @@ class ProfileController extends Controller
 
             $user->update($validated);
 
+            DB::commit();
+
             return $this->successResponse([
                 'message' => 'Profile updated successfully.',
                 'user' => $user,
             ]);
         } catch (ValidationException $e) {
+            DB::rollBack();
             throw $e;
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Profile Update Error: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Profile Update Error: ' . $e->getMessage());
             return $this->internalServerErrorResponse('Failed to update profile.');
         }
     }
@@ -51,6 +59,8 @@ class ProfileController extends Controller
     public function updatePassword(Request $request)
     {
         try {
+            DB::beginTransaction();
+
             $validated = $request->validate([
                 'current_password' => ['required', 'current_password'],
                 'password' => ['required', 'confirmed', 'min:8'],
@@ -60,11 +70,15 @@ class ProfileController extends Controller
                 'password' => Hash::make($validated['password']),
             ]);
 
+            DB::commit();
+
             return $this->successResponseMessage('Password updated successfully.');
         } catch (ValidationException $e) {
+            DB::rollBack();
             throw $e;
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Password Update Error: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Password Update Error: ' . $e->getMessage());
             return $this->internalServerErrorResponse('Failed to update password.');
         }
     }
