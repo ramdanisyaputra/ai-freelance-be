@@ -26,6 +26,12 @@ class ProfileController extends Controller
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
                 'avatar' => ['nullable', 'image', 'max:1024'], // 1MB Max
+                // Freelancer Profile Fields
+                'role' => ['nullable', 'string', 'max:255'],
+                'stack' => ['nullable', 'string'], // Expecting JSON string
+                'rate_type' => ['nullable', 'string', 'in:fixed,hourly'],
+                'min_price' => ['nullable', 'numeric', 'min:0'],
+                'currency' => ['nullable', 'string', 'max:3'],
             ]);
 
             if ($request->hasFile('avatar')) {
@@ -38,13 +44,33 @@ class ProfileController extends Controller
                 $validated['avatar'] = $path;
             }
 
-            $user->update($validated);
+            // Update User
+            $user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'avatar' => $validated['avatar'] ?? $user->avatar,
+            ]);
+
+            // Decode stack if present
+            $stack = isset($validated['stack']) ? json_decode($validated['stack'], true) : [];
+
+            // Update Freelancer Profile
+            $user->freelancerProfile()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'role' => $validated['role'],
+                    'stack' => $stack,
+                    'rate_type' => $validated['rate_type'],
+                    'min_price' => $validated['min_price'],
+                    'currency' => $validated['currency'],
+                ]
+            );
 
             DB::commit();
 
             return $this->successResponse([
                 'message' => 'Profile updated successfully.',
-                'user' => $user,
+                'user' => $user->load('freelancerProfile'),
             ]);
         } catch (ValidationException $e) {
             DB::rollBack();
