@@ -29,7 +29,7 @@ class FreelancerProfile extends Model
     {
         return [
             'stack' => 'array',
-            'min_price' => 'decimal:2',
+            'min_price' => 'integer',
         ];
     }
 

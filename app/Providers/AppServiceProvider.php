@@ -21,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Repositories\Contracts\FreelancerProfileRepositoryInterface::class,
             \App\Repositories\FreelancerProfileRepository::class
         );
+
+        $this->app->bind(
+            \App\Repositories\Contracts\ProposalRepositoryInterface::class,
+            \App\Repositories\ProposalRepository::class
+        );
     }
 
     /**
