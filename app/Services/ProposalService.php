@@ -41,6 +41,11 @@ class ProposalService
         return $proposal;
     }
 
+    public function updateProposal(int $id, array $data): Proposal
+    {
+        return $this->proposalRepository->update($id, $data);
+    }
+
     public function updateProposalContent(int $id, array $data): Proposal
     {
         $content = $data['content'] ?? $data['proposal_html'] ?? '';

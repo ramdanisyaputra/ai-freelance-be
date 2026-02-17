@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/generate-proposal', [ProposalController::class, 'generate']);
     Route::get('/proposals', [ProposalController::class, 'index']);
     Route::get('/proposals/{id}', [ProposalController::class, 'show']);
+    Route::put('/proposals/{id}', [ProposalController::class, 'update']);
     Route::delete('/proposals/{id}', [ProposalController::class, 'destroy']);
     
     // Image upload

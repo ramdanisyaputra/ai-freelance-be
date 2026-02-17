@@ -58,6 +58,44 @@ class ProposalController extends Controller
         }
     }
 
+    public function update(Request $request, int $id): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $proposal = $this->proposalService->getProposalById($id);
+
+            if (!$proposal) {
+                return $this->notFoundResponse('Proposal not found.');
+            }
+
+            // Check if user owns the proposal
+            if ($proposal->user_id !== $this->getAuthUserId()) {
+                return $this->forbiddenResponse('You do not have permission to update this proposal.');
+            }
+
+            $validated = $request->validate([
+                'title' => 'sometimes|string|max:255',
+                'content' => 'sometimes|string',
+                'summary' => 'sometimes|string',
+                'scope' => 'sometimes|array',
+            ]);
+
+            $updatedProposal = $this->proposalService->updateProposal($id, $validated);
+
+            DB::commit();
+
+            return $this->successResponse([
+                'message' => 'Proposal updated successfully',
+                'proposal' => $updatedProposal,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Update Proposal Error: ' . $e->getMessage());
+            return $this->internalServerErrorResponse('Failed to update proposal.');
+        }
+    }
+
     public function show(Request $request, int $id): JsonResponse
     {
         try {
