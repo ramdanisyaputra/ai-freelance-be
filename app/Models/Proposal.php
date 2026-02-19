@@ -11,6 +11,7 @@ class Proposal extends Model
         'brief',
         'user_brief',
         'language',
+        'title',
         'summary',
         'scope',
         'duration_days',

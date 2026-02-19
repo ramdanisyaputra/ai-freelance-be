@@ -57,6 +57,7 @@ class ProposalService
             'duration_days' => $data['estimation']['duration_days'] ?? 0,
             'price' => $data['estimation']['price'] ?? 0,
             'status' => $status,
+            'title' => $data['title'] ?? null,
         ]);
     }
 
