@@ -47,6 +47,7 @@ class GenerateProposalJob implements ShouldQueue
                 'user_brief' => $this->proposal->user_brief,
                 'language' => $this->proposal->language ?? 'id',
                 'freelancer_profile' => [
+                    'role' => $profile?->role ?? 'Freelancer',
                     'stack' => $profile?->stack ?? ['Web Development'],
                     'rate_type' => $profile?->rate_type ?? 'project',
                     'min_price' => (int) ($profile?->min_price ?? 5000000),
